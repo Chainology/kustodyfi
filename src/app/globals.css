@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-gray-900 text-white;
+  }
+}
+
+/* Print styles for PDF export */
+@media print {
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  body {
+    @apply bg-white text-black;
+  }
+
+  nav,
+  footer,
+  button,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  section {
+    page-break-inside: avoid;
+  }
+
+  #calculator-results {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+  }
+
+  #calculator-results * {
+    color: black !important;
+    border-color: #e5e7eb !important;
+  }
+
+  #calculator-results .bg-green-900\/20,
+  #calculator-results .bg-red-900\/20,
+  #calculator-results .bg-blue-900\/20 {
+    background: #f9fafb !important;
+  }
+
+  #calculator-results .bg-gray-700,
+  #calculator-results .bg-gray-800\/50 {
+    background: #f3f4f6 !important;
+  }
+}
+

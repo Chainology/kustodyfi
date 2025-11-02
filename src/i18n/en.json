@@ -1,0 +1,157 @@
+{
+  "nav": {
+    "calculator": "Calculator",
+    "howItWorks": "How It Works",
+    "custody": "Custody",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Hedge Calendar Risk. Custody You Can Trust.",
+    "subtitle": "Institutional-grade FX hedging on stablecoin rails with SEAL-approved custody controls. Built for Korean exporters, importers, and corporate treasuries.",
+    "features": [
+      "Stablecoin settlement rails",
+      "SEAL approvals & dual control",
+      "Segregated custody architecture",
+      "Licensed counterparty routing"
+    ],
+    "ctaCalculator": "Try Calculator",
+    "ctaContact": "Contact Us"
+  },
+  "problem": {
+    "title": "What is Calendar Risk?",
+    "subtitle": "When FX spot moves between your trade date and settlement date, your realized KRW amount can swing dramatically.",
+    "example": {
+      "title": "Example: Korean Exporter",
+      "scenario": "Your client agrees to pay $1M for goods. Settlement is T+2.",
+      "tradeDate": "Trade Date",
+      "tradeDateDetail": "Spot = ₩1,300/USD → Expected ₩1.3B",
+      "settlementDate": "Settlement (T+2)",
+      "settlementDateDetail": "Spot drops to ₩1,240/USD → Actual ₩1.24B",
+      "loss": "Calendar risk loss: ₩60M (~4.6%)",
+      "solution": "Forward hedging locks in ₩1,300/USD regardless of spot movement."
+    }
+  },
+  "calculator": {
+    "title": "Calendar Risk Calculator",
+    "subtitle": "See the impact of FX volatility on your USD receivables or payables",
+    "demo": "Demo Only – Illustrative Calculations",
+    "direction": "Direction",
+    "receive": "Receive USD",
+    "pay": "Pay USD",
+    "amount": "USD Amount",
+    "settlementDate": "Settlement Date",
+    "spotRate": "Current Spot (₩/USD)",
+    "forwardRate": "Forward Theo (₩/USD)",
+    "forwardOptional": "Optional – auto-calculated if empty",
+    "usdRate": "USD Interest Rate (%)",
+    "krwRate": "KRW Interest Rate (%)",
+    "basis": "Basis (bps)",
+    "spotRange": "Expected Spot Range",
+    "calculate": "Calculate",
+    "results": "Results",
+    "hedged": "Hedged (Forward)",
+    "unhedgedLow": "Unhedged (Low Spot)",
+    "unhedgedHigh": "Unhedged (High Spot)",
+    "exportPdf": "Export PDF",
+    "disclaimer": "These are illustrative calculations only. Not investment advice. KustodyFi does not execute trades.",
+    "reportTitle": "Calendar Risk Analysis Report",
+    "generatedOn": "Generated on",
+    "inputs": "Inputs",
+    "outputs": "Analysis",
+    "hash": "Report Hash (SHA-256)"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "subtitle": "End-to-end workflow from onboarding to settlement",
+    "steps": [
+      {
+        "title": "Custody & KYC",
+        "description": "Open segregated custody account. Complete KYC/AML with licensed counterparties."
+      },
+      {
+        "title": "Price & Quote",
+        "description": "Request forward quotes from licensed FX dealers. View transparent pricing and basis."
+      },
+      {
+        "title": "SEAL Approval",
+        "description": "Dual-control policy engine reviews trade parameters. Immutable audit log with hash-chain."
+      },
+      {
+        "title": "Route & Execute",
+        "description": "Order routed to licensed counterparty. KustodyFi never holds client funds in transit."
+      },
+      {
+        "title": "Settle & Audit",
+        "description": "Settlement on-chain or via bank rails. Daily Merkle proofs and monthly audit pack export."
+      }
+    ]
+  },
+  "sealCustody": {
+    "title": "SEAL-Grade Custody & Controls",
+    "subtitle": "Institutional controls designed for regulated financial entities",
+    "features": [
+      {
+        "title": "Policy Engine",
+        "description": "Configurable approval workflows, counterparty limits, and transaction thresholds with dual-control enforcement."
+      },
+      {
+        "title": "Immutable Audit Trail",
+        "description": "Hash-chain ledger with daily Merkle root publication. Every action timestamped and cryptographically verified."
+      },
+      {
+        "title": "Alerts & Limits",
+        "description": "Real-time monitoring of exposure, notional limits, and settlement status. Customizable alerts to treasury teams."
+      },
+      {
+        "title": "Monthly Audit Pack",
+        "description": "Exportable compliance reports with full transaction history, policy adherence, and cryptographic proofs."
+      }
+    ]
+  },
+  "compliance": {
+    "title": "Compliance & Disclosures",
+    "subtitle": "Transparency and regulatory readiness",
+    "sections": [
+      {
+        "title": "Analytics & Demo Only",
+        "content": "This calculator provides illustrative analytics only. It is not investment advice or a solicitation to trade derivatives. KustodyFi does not operate as an exchange or execute trades."
+      },
+      {
+        "title": "Licensed Counterparties",
+        "content": "All FX brokerage activity is routed to licensed financial institutions. KustodyFi acts as a technology service provider and custody platform only."
+      },
+      {
+        "title": "Travel Rule & ISMS-P",
+        "content": "Platform designed with Travel Rule compliance and ISMS-P (Information Security Management System – Personal) readiness for Korean regulatory frameworks."
+      },
+      {
+        "title": "KRW-Linked Products",
+        "content": "KRW-linked stablecoin products and regulatory perimeter are subject to legal counsel review. Product availability may vary by jurisdiction."
+      }
+    ],
+    "viewFull": "View Full Disclosures"
+  },
+  "contact": {
+    "title": "Get in Touch",
+    "subtitle": "Interested in hedging calendar risk for your treasury operations?",
+    "email": "Contact us at",
+    "emailAddress": "contact@kustodyfi.com",
+    "ctaEmail": "Send Email"
+  },
+  "footer": {
+    "tagline": "Institutional FX hedging with custody you can trust",
+    "company": "Company",
+    "aboutUs": "About Us",
+    "careers": "Careers",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "disclosures": "Disclosures",
+    "termsOfService": "Terms of Service",
+    "resources": "Resources",
+    "documentation": "Documentation",
+    "blog": "Blog",
+    "copyright": "© 2025 KustodyFi. All rights reserved.",
+    "disclaimer": "Not investment advice. For illustrative purposes only."
+  }
+}
+
