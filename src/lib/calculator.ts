@@ -14,6 +14,15 @@ export function calculateTimeToSettlement(settlementDate: Date): number {
 }
 
 /**
+ * Calculate years between two dates (alias for backward compatibility)
+ */
+export function calculateYearsBetweenDates(date1: Date, date2: Date): number {
+  const diffMs = Math.abs(date2.getTime() - date1.getTime())
+  const diffDays = diffMs / (1000 * 60 * 60 * 24)
+  return diffDays / 365.25
+}
+
+/**
  * Calculate theoretical forward rate using interest rate parity
  * @param spot - Current spot rate (KRW/USD)
  * @param usdRate - USD interest rate in percentage (e.g., 5.25 for 5.25%)
