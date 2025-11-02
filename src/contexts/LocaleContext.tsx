@@ -1,20 +1,22 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react'
 import { Locale, getTranslations } from '@/lib/i18n'
 import { trackEvent } from '@/lib/analytics'
 
 interface LocaleContextType {
   locale: Locale
   setLocale: (locale: Locale) => void
-  t: ReturnType<typeof getTranslations>
+  t: (key: string) => any
 }
 
 const LocaleContext = createContext<LocaleContextType | undefined>(undefined)
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en')
-  const t = getTranslations(locale)
+  
+  // Memoize the translation function so it only updates when locale changes
+  const t = useMemo(() => getTranslations(locale), [locale])
 
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale)

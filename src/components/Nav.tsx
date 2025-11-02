@@ -41,19 +41,19 @@ export default function Nav() {
               onClick={() => scrollToSection('calculator')}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              {t.nav.calculator}
+              {t('nav.calculator')}
             </button>
             <button
               onClick={() => scrollToSection('how-it-works')}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              {t.nav.howItWorks}
+              {t('nav.howItWorks')}
             </button>
             <button
               onClick={() => scrollToSection('custody')}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              {t.nav.custody}
+              {t('nav.custody')}
             </button>
             {mounted && isConnected && (
               <Link
@@ -67,7 +67,7 @@ export default function Nav() {
               onClick={() => scrollToSection('contact')}
               className="text-gray-300 hover:text-white transition-colors"
             >
-              {t.nav.contact}
+              {t('nav.contact')}
             </button>
           </div>
 

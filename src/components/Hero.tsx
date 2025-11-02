@@ -25,15 +25,15 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32">
         <div className="text-center">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            {t.hero.title}
+            {t('hero.title')}
           </h1>
 
           <p className="text-xl sm:text-2xl text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed">
-            {t.hero.subtitle}
+            {t('hero.subtitle')}
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {t.hero.features.map((feature, index) => (
+            {(t('hero.features') as string[]).map((feature, index) => (
               <div
                 key={index}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-full"
@@ -49,7 +49,7 @@ export default function Hero() {
               onClick={scrollToCalculator}
               className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-semibold text-lg transition-all transform hover:scale-105 flex items-center gap-2 shadow-lg shadow-blue-500/50"
             >
-              {t.hero.ctaCalculator}
+              {t('hero.ctaCalculator')}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>

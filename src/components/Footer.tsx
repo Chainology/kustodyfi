@@ -15,48 +15,48 @@ export default function Footer() {
               KustodyFi
             </div>
             <p className="text-sm text-gray-400">
-              {t.footer.tagline}
+              {t('footer.tagline')}
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">{t.footer.company}</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">{t('footer.company')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  {t.footer.aboutUs}
+                  {t('footer.aboutUs')}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  {t.footer.careers}
+                  {t('footer.careers')}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">{t.footer.legal}</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">{t('footer.legal')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  {t.footer.privacy}
+                  {t('footer.privacy')}
                 </Link>
               </li>
               <li>
                 <Link href="/disclosures" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  {t.footer.disclosures}
+                  {t('footer.disclosures')}
                 </Link>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-white mb-4">{t.footer.resources}</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">{t('footer.resources')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
-                  {t.footer.documentation}
+                  {t('footer.documentation')}
                 </Link>
               </li>
             </ul>
@@ -66,10 +66,10 @@ export default function Footer() {
         <div className="pt-8 border-t border-gray-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-400">
-              {t.footer.copyright}
+              {t('footer.copyright')}
             </p>
             <p className="text-xs text-gray-500">
-              {t.footer.disclaimer}
+              {t('footer.disclaimer')}
             </p>
           </div>
         </div>

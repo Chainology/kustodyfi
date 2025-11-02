@@ -2,39 +2,61 @@
   "nav": {
     "calculator": "Calculator",
     "howItWorks": "How It Works",
-    "custody": "Custody",
+    "custody": "SEAL",
     "contact": "Contact"
   },
   "hero": {
     "title": "Hedge Calendar Risk. Custody You Can Trust.",
-    "subtitle": "Institutional-grade FX hedging on stablecoin rails with SEAL-approved custody controls. Built for Korean exporters, importers, and corporate treasuries.",
+    "subtitle": "Price and manage USD↔KRW exposures over T+30 to T+365 on stablecoin rails. SEAL-enforced approvals, immutable audit, and segregated custody.",
     "features": [
-      "Stablecoin settlement rails",
-      "SEAL approvals & dual control",
-      "Segregated custody architecture",
-      "Licensed counterparty routing"
+      "SEAL-enforced approvals",
+      "Immutable audit trail",
+      "Segregated custody",
+      "Licensed bank routing"
     ],
-    "ctaCalculator": "Try Calculator",
-    "ctaContact": "Contact Us"
+    "ctaCalculator": "Try Calendar-Risk Calculator",
+    "ctaContact": "Talk to Us"
   },
   "problem": {
-    "title": "What is Calendar Risk?",
-    "subtitle": "When FX spot moves between your trade date and settlement date, your realized KRW amount can swing dramatically.",
+    "title": "What Is Calendar Risk?",
+    "subtitle": "Calendar risk is the FX uncertainty between signing a contract and getting paid. Without hedging, your KRW outcome is unpredictable.",
     "example": {
-      "title": "Example: Korean Exporter",
-      "scenario": "Your client agrees to pay $1M for goods. Settlement is T+2.",
-      "tradeDate": "Trade Date",
-      "tradeDateDetail": "Spot = ₩1,300/USD → Expected ₩1.3B",
-      "settlementDate": "Settlement (T+2)",
-      "settlementDateDetail": "Spot drops to ₩1,240/USD → Actual ₩1.24B",
-      "loss": "Calendar risk loss: ₩60M (~4.6%)",
-      "solution": "Forward hedging locks in ₩1,300/USD regardless of spot movement."
+      "title": "Real Example: Korean Exporter",
+      "scenario": "Your client agrees to pay USD 100,000 in 3 months. Settlement is uncertain.",
+      "tradeDate": "Contract Date (Today)",
+      "tradeDateDetail": "Expected spot = ₩1,300/USD → ₩130M estimated",
+      "settlementDate": "Payment Date (T+90)",
+      "settlementDateDetail": "Actual spot could be ₩1,240–₩1,360/USD",
+      "loss": "Unhedged outcome: ₩124M–₩136M (₩12M swing!)",
+      "solution": "Forward hedge locks in ₩1,305/USD = fixed ₩130.5M regardless of spot movement."
+    },
+    "chart": {
+      "title": "Unhedged vs Hedged Outcomes",
+      "unhedgedLow": "Unhedged Low: ₩124M (if spot drops to 1,240)",
+      "unhedgedHigh": "Unhedged High: ₩136M (if spot rises to 1,360)",
+      "hedged": "Hedged Fixed: ₩130.5M (locked via forward)"
     }
+  },
+  "theoreticalPrice": {
+    "title": "How the Price Works (Theoretical Price)",
+    "subtitle": "We publish a transparent, non-binding 'theoretical' USD↔KRW forward curve daily.",
+    "formula": {
+      "title": "Pricing Formula",
+      "equation": "F = S × (1 + r_USD × t) / (1 + r_KRW × t) + basis + opsCost",
+      "explanation": "Where F = forward rate, S = spot, r = interest rates, t = time in years, basis = market adjustment, opsCost = operational cost"
+    },
+    "features": [
+      "Rates and basis updated daily",
+      "Every publish is SEAL-logged",
+      "Transparent, non-binding quotes",
+      "Client requests firm quotes from banks"
+    ],
+    "tenors": "Available tenors: 1M, 3M, 6M, 12M forwards"
   },
   "calculator": {
     "title": "Calendar Risk Calculator",
-    "subtitle": "See the impact of FX volatility on your USD receivables or payables",
-    "demo": "Demo Only – Illustrative Calculations",
+    "subtitle": "Simulate hedged vs unhedged outcomes for your USD↔KRW exposure",
+    "demo": "Demo Only – Theoretical Calculations",
     "direction": "Direction",
     "receive": "Receive USD",
     "pay": "Pay USD",
@@ -53,7 +75,7 @@
     "unhedgedLow": "Unhedged (Low Spot)",
     "unhedgedHigh": "Unhedged (High Spot)",
     "exportPdf": "Export PDF",
-    "disclaimer": "These are illustrative calculations only. Not investment advice. KustodyFi does not execute trades.",
+    "disclaimer": "Analytics demo only. Not investment advice. Brokerage with licensed counterparties; KustodyFi is not an exchange.",
     "reportTitle": "Calendar Risk Analysis Report",
     "generatedOn": "Generated on",
     "inputs": "Inputs",
@@ -61,68 +83,98 @@
     "hash": "Report Hash (SHA-256)"
   },
   "howItWorks": {
-    "title": "How It Works",
-    "subtitle": "End-to-end workflow from onboarding to settlement",
+    "title": "Broker-First Workflow",
+    "subtitle": "Six steps from theoretical price to settled trade with full audit trail",
     "steps": [
       {
-        "title": "Custody & KYC",
-        "description": "Open segregated custody account. Complete KYC/AML with licensed counterparties."
+        "title": "1. Review Theoretical Price",
+        "description": "Client logs in and reviews our daily theoretical USD↔KRW forward curve (non-binding, SEAL-logged)."
       },
       {
-        "title": "Price & Quote",
-        "description": "Request forward quotes from licensed FX dealers. View transparent pricing and basis."
+        "title": "2. Request Firm Quotes",
+        "description": "Client clicks 'Get firm quotes.' SEAL signs and logs the request with timestamp and policy check."
       },
       {
-        "title": "SEAL Approval",
-        "description": "Dual-control policy engine reviews trade parameters. Immutable audit log with hash-chain."
+        "title": "3. Banks Return Quotes",
+        "description": "Licensed banks/securities return firm, executable quotes. All responses logged in SEAL audit trail."
       },
       {
-        "title": "Route & Execute",
-        "description": "Order routed to licensed counterparty. KustodyFi never holds client funds in transit."
+        "title": "4. Dual Approval",
+        "description": "Client selects best quote. SEAL enforces dual/multi-approval per policy (no money moves without two humans)."
       },
       {
-        "title": "Settle & Audit",
-        "description": "Settlement on-chain or via bank rails. Daily Merkle proofs and monthly audit pack export."
+        "title": "5. Route to Bank",
+        "description": "After SEAL green-light, order routed to chosen bank. Custody only releases funds post-approval."
+      },
+      {
+        "title": "6. Settle & Audit Pack",
+        "description": "Trade settles via bank rails or on-chain. Monthly audit pack (PDF/CSV) generated with full forensic trail."
       }
     ]
   },
   "sealCustody": {
-    "title": "SEAL-Grade Custody & Controls",
-    "subtitle": "Institutional controls designed for regulated financial entities",
+    "title": "SEAL: Execution Firewall for Finance",
+    "subtitle": "Secure Execution & Approval Layer — no money moves without policy and two humans",
     "features": [
       {
-        "title": "Policy Engine",
-        "description": "Configurable approval workflows, counterparty limits, and transaction thresholds with dual-control enforcement."
+        "title": "Dual/Multi-Approval",
+        "description": "Every quote request, trade, or transfer requires two humans. No single point of failure or fraud."
       },
       {
-        "title": "Immutable Audit Trail",
+        "title": "Policy-as-Code",
+        "description": "Configurable limits, whitelists, timing windows, and counterparty rules enforced at execution layer."
+      },
+      {
+        "title": "Immutable Audit Log",
         "description": "Hash-chain ledger with daily Merkle root publication. Every action timestamped and cryptographically verified."
       },
       {
-        "title": "Alerts & Limits",
-        "description": "Real-time monitoring of exposure, notional limits, and settlement status. Customizable alerts to treasury teams."
-      },
-      {
         "title": "Monthly Audit Pack",
-        "description": "Exportable compliance reports with full transaction history, policy adherence, and cryptographic proofs."
+        "description": "Exportable compliance reports (PDF/CSV) with full transaction history, approvals, and cryptographic proofs."
       }
-    ]
+    ],
+    "schematic": {
+      "title": "SEAL Architecture",
+      "description": "Client → SEAL Policy Check → Dual Approval → Bank Execution → Custody Settlement → Audit Log"
+    }
+  },
+  "marketFit": {
+    "title": "Why KustodyFi?",
+    "subtitle": "Designed for Korean corporates and their banking partners",
+    "forCorporates": {
+      "title": "For Exporters & Importers",
+      "features": [
+        "One interface, multiple banks — best execution guaranteed",
+        "KRW certainty: lock in rates 30–365 days ahead",
+        "Faster reconciliation with immutable audit trail",
+        "SEAL dual approvals = internal control + compliance evidence"
+      ]
+    },
+    "forBanks": {
+      "title": "For Banks & Securities",
+      "features": [
+        "Clean, KYC-verified order flow from corporates",
+        "No wallet risk — custody handled by KustodyFi",
+        "Forensic audit trail reduces disputes",
+        "Stablecoin settlement option for faster finality"
+      ]
+    }
   },
   "compliance": {
     "title": "Compliance & Disclosures",
     "subtitle": "Transparency and regulatory readiness",
     "sections": [
       {
-        "title": "Analytics & Demo Only",
-        "content": "This calculator provides illustrative analytics only. It is not investment advice or a solicitation to trade derivatives. KustodyFi does not operate as an exchange or execute trades."
+        "title": "Analytics Demo Only",
+        "content": "This calculator provides illustrative analytics only. It is not investment advice or a solicitation to trade derivatives. KustodyFi does not operate as an exchange."
       },
       {
         "title": "Licensed Counterparties",
-        "content": "All FX brokerage activity is routed to licensed financial institutions. KustodyFi acts as a technology service provider and custody platform only."
+        "content": "All FX brokerage activity is routed to licensed banks and securities firms. KustodyFi acts as a technology service provider and custody platform only."
       },
       {
-        "title": "Travel Rule & ISMS-P",
-        "content": "Platform designed with Travel Rule compliance and ISMS-P (Information Security Management System – Personal) readiness for Korean regulatory frameworks."
+        "title": "SEAL Audit & ISMS-P",
+        "content": "SEAL audit framework and ISMS-P (Information Security Management System – Personal) readiness are in progress. Full compliance documentation available upon request."
       },
       {
         "title": "KRW-Linked Products",
@@ -132,14 +184,14 @@
     "viewFull": "View Full Disclosures"
   },
   "contact": {
-    "title": "Get in Touch",
-    "subtitle": "Interested in hedging calendar risk for your treasury operations?",
+    "title": "Join the Calendar-Risk Beta",
+    "subtitle": "We are onboarding pilot exporters and importers for the calendar-risk beta. Reach out to join.",
     "email": "Contact us at",
     "emailAddress": "contact@kustodyfi.com",
-    "ctaEmail": "Send Email"
+    "ctaEmail": "Talk to Us"
   },
   "footer": {
-    "tagline": "Institutional FX hedging with custody you can trust",
+    "tagline": "Compliance-first broker platform for Korean FX hedging",
     "company": "Company",
     "aboutUs": "About Us",
     "careers": "Careers",
@@ -151,7 +203,6 @@
     "documentation": "Documentation",
     "blog": "Blog",
     "copyright": "© 2025 KustodyFi. All rights reserved.",
-    "disclaimer": "Not investment advice. For illustrative purposes only."
+    "disclaimer": "Analytics demo only. Brokerage with licensed counterparties. Not an exchange."
   }
 }
-
