@@ -143,48 +143,71 @@ flowchart LR
 The hosted demo trims the system down to Vercel (Next.js) for the UI/API, Neon for storage, Render-hosted n8n for deterministic webhooks, and an optional browser wallet on an EVM testnet. We keep the same SEAL framing—policy-as-code, dual approvals, simulation, circuit breakers, Travel-Rule receipt stub, and unified audit packs—so the flow mirrors the final target even though the integrations are mocked.
 
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+    "fontSize": "14px",
+    "primaryColor": "#F6F8FB",
+    "primaryBorderColor": "#AEB7C2",
+    "lineColor": "#64748B",
+    "tertiaryColor": "#FFFFFF"
+  },
+  "flowchart": { "curve": "linear", "htmlLabels": true, "useMaxWidth": true }
+}}%%
 flowchart LR
-  classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
-  classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
-  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#111,font-size:12px
-  classDef ext  fill:#ECFDF5,stroke:#90C8B0,rx:8,ry:8,color:#111,font-size:12px
-  classDef ops  fill:#FFF4E5,stroke:#D8B892,rx:8,ry:8,color:#111,font-size:12px
+  classDef box  fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef white fill:#FFFFFF,stroke:#CBD5E1,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef ext  fill:#ECFDF5,stroke:#86EFAC,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef ops  fill:#FFF7ED,stroke:#F59E0B,rx:8,ry:8,color:#0F172A,font-size:12px
 
-  subgraph CLIENT["Client Org (Treasury / Risk / Finance)"]
-    WEB["Next.js UI<br/>Pricing · RFQ · Approvals(WebAuthn) · Execute · Audit"]:::box
+  %% ===== Client lane (browser) =====
+  subgraph CLIENT["Browser (User)"]
+    UI["Next.js UI (Vercel)<br/>Pricing · RFQ · Approvals(WebAuthn) · Execute · Audit"]:::box
+    WAL["(Optional) Browser wallet (wagmi/viem)<br/>EVM testnet signer"]:::ext
   end
-  subgraph KF["Vercel (Next.js API routes)"]
-    APIGW["API routes:<br/>/pricing/curve · /rfq · /seal/* · /execute · /settlement/attest · /audit-pack"]:::white
-    subgraph SEAL["SEAL Core — Execution Firewall"]
-      P["Policy-as-code"]:::seal
-      A["Dual approvals (WebAuthn)"]:::seal
-      S["Tx simulation (human-readable)"]:::seal
-      B["Circuit breakers (velocity/bulk/freeze)"]:::seal
-      L["Immutable audit (hash-chain)"]:::seal
+  style CLIENT fill:#F9FAFB,stroke:#CBD5E1,stroke-width:2,stroke-dasharray:6 4
+
+  %% ===== App/API lane =====
+  subgraph VERCEL["Vercel — Next.js API routes"]
+    API["/pricing/curve · /rfq · /seal/policy-check · /seal/approve<br/>/execute · /settlement/attest · /audit-pack"]:::white
+    subgraph SEAL["SEAL v0 — Demo Gates"]
+      P["Policy evaluator (JSON)<br/>limits · whitelists · time windows"]:::seal
+      A["Two‑person approvals (WebAuthn)<br/>Dealer + CFO"]:::seal
+      SIM["Human‑readable simulation<br/>(intent explainer templates)"]:::seal
+      L["Immutable log (hash‑chained)<br/>daily root (no on‑chain anchor in demo)"]:::seal
     end
   end
-  subgraph DATA["Neon Postgres"]
+  style VERCEL fill:#FFFFFF,stroke:#94A3B8,stroke-width:2,stroke-dasharray:6 4
+
+  %% ===== Data lane =====
+  subgraph NEON["Neon Postgres (Free)"]
     DB["users · webauthn_credentials · policies · quotes · executions · audit_events"]:::ops
   end
-  subgraph EXT["Render (n8n) — stubs"]
-    RFQW["/webhook/rfq"]:::ext
-    CUST["/webhook/custodian"]:::ext
-    COMP["/webhook/compliance"]:::ext
-  end
-  subgraph WAL["Demo signer (testnet)"]
-    WALLET["Browser wallet (wagmi/viem · WCv2)"]:::ext
-  end
+  style NEON fill:#FFFBEB,stroke:#F59E0B,stroke-width:2,stroke-dasharray:6 4
 
-  WEB --> APIGW
-  APIGW --> RFQW
-  APIGW --> CUST
-  APIGW --> COMP
-  APIGW --> DB
-  P --> DB
-  A --> DB
-  S --> DB
+  %% ===== External-stub lane =====
+  subgraph N8N["Render (Free) — n8n stubs"]
+    RFQW["/webhook/rfq → 3 quotes (IDs, validUntil)"]:::ext
+    CUST["/webhook/custodian → pseudo txHash"]:::ext
+    COMP["/webhook/compliance → Travel‑Rule receipt stub"]:::ext
+  end
+  style N8N fill:#F0FDF4,stroke:#86EFAC,stroke-width:2,stroke-dasharray:6 4
+
+  %% ===== Flows =====
+  UI --> API
+  API --> DB
+  API --> RFQW
+  API --> CUST
+  API --> COMP
+  API --> P
+  API --> A
+  API --> SIM
   L --> DB
-  WALLET -. "Demo Mode: sign-intent → sendTransaction" .-> APIGW
+
+  %% Demo Mode (browser wallet signer)
+  WAL -. "Demo Mode: sign‑intent → sendTransaction (testnet)" .-> API
 ```
 
 ### Component responsibilities
