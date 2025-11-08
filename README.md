@@ -14,94 +14,115 @@ The final product is a middle-layer orchestration with SEAL as the execution fir
 ### System Architecture (Mermaid)
 
 ```mermaid
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial",
+    "fontSize": "14px",
+    "primaryColor": "#F6F8FB",
+    "primaryBorderColor": "#AEB7C2",
+    "lineColor": "#64748B",
+    "tertiaryColor": "#FFFFFF"
+  },
+  "flowchart": { "curve": "linear", "htmlLabels": true, "useMaxWidth": true }
+}}%%
 flowchart LR
-  %% ====== Styles ======
-  classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
-  classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
-  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#111,font-size:12px
-  classDef ext  fill:#ECFDF5,stroke:#90C8B0,rx:8,ry:8,color:#111,font-size:12px
-  classDef ops  fill:#FFF4E5,stroke:#D8B892,rx:8,ry:8,color:#111,font-size:12px
-  classDef risk fill:#FFE4E6,stroke:#FB7185,rx:8,ry:8,color:#111,font-size:12px
+  %% ===== Styles for nodes =====
+  classDef box  fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef white fill:#FFFFFF,stroke:#CBD5E1,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef ext  fill:#ECFDF5,stroke:#86EFAC,rx:8,ry:8,color:#0F172A,font-size:12px
+  classDef ops  fill:#FFF7ED,stroke:#F59E0B,rx:8,ry:8,color:#0F172A,font-size:12px
 
-  %% ====== Client ======
+  %% ===== Client lane =====
   subgraph CLIENT["Client Org (Treasury · Risk · Finance)"]
-    UI["Web App (Next.js/TS)\nTreasury screens: Pricing · RFQ · Approvals · Execute · Audit"]:::box
+    UI["Web App (Next.js/TS)<br/>Pricing · RFQ · Approvals · Execute · Audit"]:::box
     IDP["SSO (OIDC/SAML) · SCIM"]:::box
-    PASSKEY["FIDO2/WebAuthn authenticators (Dealer · CFO)"]:::box
+    PASSKEY["FIDO2/WebAuthn authenticators<br/>(Dealer · CFO)"]:::box
   end
+  style CLIENT fill:#F9FAFB,stroke:#CBD5E1,stroke-width:2,stroke-dasharray:6 4
 
-  %% ====== Orchestration Plane ======
-  subgraph KF["KustodyFi Orchestration Plane (with SEAL inside)"]
-    GW["API Gateway/WAF (Kong/Envoy)\n• mTLS · JWT/OIDC · rate limit · request signing"]:::white
+  %% ===== Orchestration lane (with SEAL) =====
+  subgraph KF["KustodyFi Orchestration Plane (SEAL inside)"]
+    GW["API Gateway/WAF (Kong/Envoy)<br/>mTLS · JWT/OIDC · rate limit · request signing"]:::white
 
     subgraph ORCH["Orchestration Services"]
-      PRICE["Pricing Guidance svc\n• Theo curve calc (spot + carry + basis + ops)\n• Snapshot versioning"]:::white
-      RFQ["RFQ Router\n• Bank connectors (FIX/REST/ISO20022/SFTP)\n• Quote validity timers · IDs"]:::white
-      SETTLER["Settlement Orchestrator\n• Fiat rail tasks • Stablecoin tx linkage\n• Attestation builder"]:::white
-      SIGNER["Signer Broker\n• Custodian adapters (Fireblocks/BitGo/Copper/Anchorage/Circle)\n• Customer‑managed MPC/HSM"]:::white
-      TR["Compliance Orchestrator\n• Travel‑Rule networks (CODE/VerifyVASP/Sygna)\n• KYC/KYB vendor hooks"]:::white
-      EXPORT["Audit Exporter\n• PDF/CSV bundles • API export • evidence packaging"]:::white
-      ERP["ERP/TMS adapters (SAP/Kyriba/etc.)\n• Payment status sync · reference matching"]:::white
+      PRICE["Pricing Guidance svc<br/>Theo curve (spot+carry+basis+ops); versioned snapshot"]:::white
+      RFQ["RFQ Router<br/>Bank connectors (FIX/REST/ISO20022/SFTP); quote timers/IDs"]:::white
+      SETTLER["Settlement Orchestrator<br/>Fiat tasks · stablecoin linkage; attestation builder"]:::white
+      SIGNER["Signer Broker<br/>Custodian adapters (Fireblocks/BitGo/Copper/Anchorage/Circle)"]:::white
+      TR["Compliance Orchestrator<br/>Travel‑Rule (CODE/VerifyVASP/Sygna) · KYC/KYB hooks"]:::white
+      EXPORT["Audit Exporter<br/>PDF/CSV bundles · API export · evidence packaging"]:::white
+      ERP["ERP/TMS adapters (SAP/Kyriba/etc.)<br/>Status sync · reference matching"]:::white
     end
 
-    %% ====== SEAL Core ======
     subgraph SEAL["SEAL Core — Execution Firewall"]
-      POLICY["Policy Engine (DSL→WASM)\n• Limits · whitelists · time windows · method allowlists\n• Versioned policies, explainable decisions"]:::seal
-      APPROVAL["Approvals svc\n• Role/quorum model • FIDO2 step‑up • hardware attestations"]:::seal
-      SIM["Tx Simulation\n• EVM static‑call/ABI decode • human‑readable intent diffs\n• Contract/method allowlists"]:::seal
-      BRAKE["Circuit Breakers\n• velocity/bulk caps • org‑wide FREEZE • cold→warm guardrails"]:::seal
-      AUDIT["Immutable Audit Ledger\n• append‑only hash chain • daily Merkle root\n• anchor on public chain"]:::seal
+      POLICY["Policy Engine (DSL→WASM)<br/>Limits · whitelists · time windows · method allowlists"]:::seal
+      APPROVAL["Approvals svc<br/>Role/quorum · FIDO2 step‑up · hardware attestations"]:::seal
+      SIM["Tx Simulation<br/>EVM static‑call/ABI decode; human‑readable diffs; allowlists"]:::seal
+      BRAKE["Circuit Breakers<br/>Velocity/bulk caps · org‑wide FREEZE · cold→warm guardrails"]:::seal
+      AUDIT["Immutable Audit Ledger<br/>Append‑only hash chain · daily Merkle root · on‑chain anchor"]:::seal
     end
   end
+  style KF fill:#FFFFFF,stroke:#94A3B8,stroke-width:2,stroke-dasharray:6 4
 
-  %% ====== Data & Ops Plane ======
+  %% ===== Data & Ops lane =====
   subgraph DATA["Data & Ops Plane"]
-    DB["Postgres (OLTP): orgs · users · policies · quotes · approvals · executions · settlement · audit_events"]:::ops
-    BUS["Event Bus (Kafka/Redpanda): outbox · retries · SAGA orchestration"]:::ops
-    OBJ["Object Store (WORM): quote blobs · TR receipts · PDFs · CSVs"]:::ops
-    WH["Warehouse (Snowflake/BigQuery): reporting · anomaly features"]:::ops
-    OBS["Observability: OTel · Prom/Graf · Jaeger · Loki"]:::ops
-    SECRETS["Secrets: Vault/KMS · mTLS/OIDC service tokens · rotation"]:::ops
+    DB["Postgres (OLTP)<br/>orgs · users · policies · quotes · approvals · executions · settlement · audit_events"]:::ops
+    BUS["Event Bus (Kafka/Redpanda)<br/>outbox · retries · SAGA orchestration"]:::ops
+    OBJ["Object Store (WORM)<br/>quotes · TR receipts · PDFs · CSVs"]:::ops
+    WH["Warehouse (Snowflake/BigQuery)<br/>reporting · anomaly features"]:::ops
+    OBS["Observability<br/>OTel · Prom/Graf · Jaeger · Loki"]:::ops
+    SECRETS["Secrets<br/>Vault/KMS · mTLS/OIDC tokens · rotation"]:::ops
   end
+  style DATA fill:#FFFBEB,stroke:#F59E0B,stroke-width:2,stroke-dasharray:6 4
 
-  %% ====== External Counterparties ======
+  %% ===== External lane =====
   subgraph EXT["External Counterparties"]
-    BANKS["Banks / LPs\n• multi‑bank quotes & confirms"]:::ext
-    CUST["Custodians\n• enterprise custody signers\n• client‑managed MPC/HSM"]:::ext
-    CHAINS["On‑chain Networks (EVM L2 first)\n• Base/Polygon · testnets/mainnets"]:::ext
-    TRNET["Travel‑Rule Networks\n• CODE · VerifyVASP · Sygna"]:::ext
+    BANKS["Banks / Liquidity Providers<br/>multi‑bank quotes & confirms"]:::ext
+    CUST["Enterprise Custodians<br/>client‑managed MPC/HSM signers"]:::ext
+    CHAINS["On‑chain Networks (EVM L2 first)<br/>Base · Polygon · testnets/mainnets"]:::ext
+    TRNET["Travel‑Rule Networks<br/>CODE · VerifyVASP · Sygna"]:::ext
     KYC["KYC/KYB vendors"]:::ext
   end
+  style EXT fill:#F0FDF4,stroke:#86EFAC,stroke-width:2,stroke-dasharray:6 4
 
-  %% ====== Flows ======
+  %% ===== Primary flows (orthogonal) =====
   UI --> GW
   GW --> PRICE
   GW --> RFQ
   GW --> SETTLER
   GW --> EXPORT
+
   RFQ --> BANKS
   BANKS --> RFQ
+
   GW --> POLICY
   GW --> APPROVAL
   GW --> SIM
   GW --> BRAKE
+
   POLICY --> AUDIT
   APPROVAL --> AUDIT
   SIM --> AUDIT
   BRAKE --> AUDIT
+
   SIGNER --> CUST
   CUST --> CHAINS
   CHAINS --> SETTLER
   SETTLER --> AUDIT
+
   TR --> TRNET
   TRNET --> TR
   TR --> AUDIT
+
   GW --> DB
   PRICE --> DB
   RFQ --> DB
   SETTLER --> DB
   EXPORT --> DB
   ERP --> DB
+
   POLICY --> BUS
   APPROVAL --> BUS
   SIM --> BUS
@@ -109,12 +130,12 @@ flowchart LR
   AUDIT --> BUS
   BUS --> WH
   EXPORT --> OBJ
+
   SECRETS --> GW
   SECRETS --> RFQ
   SECRETS --> SETTLER
   SECRETS --> TR
   SECRETS --> EXPORT
-  BRAKE:::risk
 ```
 
 ## Demo Architecture (Vercel + Neon + n8n)
