@@ -1,15 +1,125 @@
-# Title & elevator pitch
-
 **KustodyFi – SEAL-governed hedging & settlement orchestration (demo)**  
-This repo is a working sketch of how we want SEAL to choreograph a hedge: publish a curve, collect real quotes, force two humans to approve, prove the transfer happened, and spit out an audit pack. Nothing fancy—just enough structure to show the moving parts and keep keys out of the server.
+This repo captures the minimal wiring we use to show how SEAL manages a hedge: price guidance, multi-bank RFQ, two-person approvals, execution, and proof. Everything stays keyless on the server and ends with an audit pack.
 
-## Goals of this demo
+## Goals of Demo
 
-- Walk through the entire lifecycle without ever parking a custody key on the backend.
-- Require both Dealer and CFO passkeys before anything executable gets through.
-- After settlement, bundle curve inputs, quotes, approvals, tx/bank refs, Travel-Rule stub, and the hash-chain digest into a single ZIP you could hand to an auditor.
+- Prove the full lifecycle (pricing → RFQ → approvals → execute → attest → audit pack) without server-side private keys.
+- Force Dealer + CFO passkeys before unlocking execution.
+- Emit a ZIP that bundles curve inputs, quotes, approvals, tx/bank refs, Travel-Rule receipt stub, and the hash-chain digest.
 
-## Cloud architecture (Mermaid diagram)
+## Architecture (Final Target)
+
+The final product is a middle-layer orchestration with SEAL as the execution firewall. It integrates bank RFQ, enterprise custodians, Travel-Rule networks, and on-chain rails while producing a regulator-ready audit pack (quote→approvals→settlement proofs). Each block below addresses the incident patterns and competitor gaps we see in the field: policy-as-code plus dual approval to block insider pushes, simulation and circuit breakers to avoid fat-finger or velocity abuse, and unified audit outputs so ops/legal have a single source of truth.
+
+### System Architecture (Mermaid)
+
+```mermaid
+flowchart LR
+  %% ====== Styles ======
+  classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
+  classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
+  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#111,font-size:12px
+  classDef ext  fill:#ECFDF5,stroke:#90C8B0,rx:8,ry:8,color:#111,font-size:12px
+  classDef ops  fill:#FFF4E5,stroke:#D8B892,rx:8,ry:8,color:#111,font-size:12px
+  classDef risk fill:#FFE4E6,stroke:#FB7185,rx:8,ry:8,color:#111,font-size:12px
+
+  %% ====== Client ======
+  subgraph CLIENT["Client Org (Treasury · Risk · Finance)"]
+    UI["Web App (Next.js/TS)\nTreasury screens: Pricing · RFQ · Approvals · Execute · Audit"]:::box
+    IDP["SSO (OIDC/SAML) · SCIM"]:::box
+    PASSKEY["FIDO2/WebAuthn authenticators (Dealer · CFO)"]:::box
+  end
+
+  %% ====== Orchestration Plane ======
+  subgraph KF["KustodyFi Orchestration Plane (with SEAL inside)"]
+    GW["API Gateway/WAF (Kong/Envoy)\n• mTLS · JWT/OIDC · rate limit · request signing"]:::white
+
+    subgraph ORCH["Orchestration Services"]
+      PRICE["Pricing Guidance svc\n• Theo curve calc (spot + carry + basis + ops)\n• Snapshot versioning"]:::white
+      RFQ["RFQ Router\n• Bank connectors (FIX/REST/ISO20022/SFTP)\n• Quote validity timers · IDs"]:::white
+      SETTLER["Settlement Orchestrator\n• Fiat rail tasks • Stablecoin tx linkage\n• Attestation builder"]:::white
+      SIGNER["Signer Broker\n• Custodian adapters (Fireblocks/BitGo/Copper/Anchorage/Circle)\n• Customer‑managed MPC/HSM"]:::white
+      TR["Compliance Orchestrator\n• Travel‑Rule networks (CODE/VerifyVASP/Sygna)\n• KYC/KYB vendor hooks"]:::white
+      EXPORT["Audit Exporter\n• PDF/CSV bundles • API export • evidence packaging"]:::white
+      ERP["ERP/TMS adapters (SAP/Kyriba/etc.)\n• Payment status sync · reference matching"]:::white
+    end
+
+    %% ====== SEAL Core ======
+    subgraph SEAL["SEAL Core — Execution Firewall"]
+      POLICY["Policy Engine (DSL→WASM)\n• Limits · whitelists · time windows · method allowlists\n• Versioned policies, explainable decisions"]:::seal
+      APPROVAL["Approvals svc\n• Role/quorum model • FIDO2 step‑up • hardware attestations"]:::seal
+      SIM["Tx Simulation\n• EVM static‑call/ABI decode • human‑readable intent diffs\n• Contract/method allowlists"]:::seal
+      BRAKE["Circuit Breakers\n• velocity/bulk caps • org‑wide FREEZE • cold→warm guardrails"]:::seal
+      AUDIT["Immutable Audit Ledger\n• append‑only hash chain • daily Merkle root\n• anchor on public chain"]:::seal
+    end
+  end
+
+  %% ====== Data & Ops Plane ======
+  subgraph DATA["Data & Ops Plane"]
+    DB["Postgres (OLTP): orgs · users · policies · quotes · approvals · executions · settlement · audit_events"]:::ops
+    BUS["Event Bus (Kafka/Redpanda): outbox · retries · SAGA orchestration"]:::ops
+    OBJ["Object Store (WORM): quote blobs · TR receipts · PDFs · CSVs"]:::ops
+    WH["Warehouse (Snowflake/BigQuery): reporting · anomaly features"]:::ops
+    OBS["Observability: OTel · Prom/Graf · Jaeger · Loki"]:::ops
+    SECRETS["Secrets: Vault/KMS · mTLS/OIDC service tokens · rotation"]:::ops
+  end
+
+  %% ====== External Counterparties ======
+  subgraph EXT["External Counterparties"]
+    BANKS["Banks / LPs\n• multi‑bank quotes & confirms"]:::ext
+    CUST["Custodians\n• enterprise custody signers\n• client‑managed MPC/HSM"]:::ext
+    CHAINS["On‑chain Networks (EVM L2 first)\n• Base/Polygon · testnets/mainnets"]:::ext
+    TRNET["Travel‑Rule Networks\n• CODE · VerifyVASP · Sygna"]:::ext
+    KYC["KYC/KYB vendors"]:::ext
+  end
+
+  %% ====== Flows ======
+  UI --> GW
+  GW --> PRICE
+  GW --> RFQ
+  GW --> SETTLER
+  GW --> EXPORT
+  RFQ --> BANKS
+  BANKS --> RFQ
+  GW --> POLICY
+  GW --> APPROVAL
+  GW --> SIM
+  GW --> BRAKE
+  POLICY --> AUDIT
+  APPROVAL --> AUDIT
+  SIM --> AUDIT
+  BRAKE --> AUDIT
+  SIGNER --> CUST
+  CUST --> CHAINS
+  CHAINS --> SETTLER
+  SETTLER --> AUDIT
+  TR --> TRNET
+  TRNET --> TR
+  TR --> AUDIT
+  GW --> DB
+  PRICE --> DB
+  RFQ --> DB
+  SETTLER --> DB
+  EXPORT --> DB
+  ERP --> DB
+  POLICY --> BUS
+  APPROVAL --> BUS
+  SIM --> BUS
+  BRAKE --> BUS
+  AUDIT --> BUS
+  BUS --> WH
+  EXPORT --> OBJ
+  SECRETS --> GW
+  SECRETS --> RFQ
+  SECRETS --> SETTLER
+  SECRETS --> TR
+  SECRETS --> EXPORT
+  BRAKE:::risk
+```
+
+## Demo Architecture (Vercel + Neon + n8n)
+
+The hosted demo trims the system down to Vercel (Next.js) for the UI/API, Neon for storage, Render-hosted n8n for deterministic webhooks, and an optional browser wallet on an EVM testnet. We keep the same SEAL framing—policy-as-code, dual approvals, simulation, circuit breakers, Travel-Rule receipt stub, and unified audit packs—so the flow mirrors the final target even though the integrations are mocked.
 
 ```mermaid
 flowchart LR
@@ -58,77 +168,70 @@ flowchart LR
 
 ### Component responsibilities
 
-- **Client** – The Next.js app handles login, passkey prompts, and showing curve/RFQ/approval data. It only calls API routes; it never stores quotes or secrets locally.
-- **Vercel API routes** – These are the brain stem. Each handler validates input, runs SEAL logic, and records an audit event before responding.
-- **SEAL core** – A bundle of modules for policy parsing, simulation output, WebAuthn verification, circuit-breaker math, and hash-chain logging.
-- **Neon Postgres** – Holds users, WebAuthn credentials, policies, quotes, executions, and audit events. Every audit row stores a hash of the previous row.
-- **Render/n8n** – Stub webhooks that stand in for banks, custodians, and compliance teams. They return deterministic JSON so the demo is repeatable.
-- **Demo signer** – Optional wallet on a testnet. When demo mode is enabled, all execution flows stop at “sign this intent” and the wallet does the broadcast.
+- **Client** – Next.js UI handles auth, passkey prompts, curve/RFQ views, approvals, and audit downloads. Everything dynamic comes from API routes.
+- **API routes** – Each handler validates input, runs SEAL logic, and logs an audit event before responding.
+- **SEAL core** – Modules for policy parsing, simulation output, WebAuthn verification, circuit breakers, and hash-chain logging.
+- **Neon Postgres** – Ground truth for identities, policies, quotes, executions, and audit events.
+- **Render / n8n** – Deterministic stubs that mimic banks, custodians, and compliance gateways so the demo can run end-to-end without external credentials.
+- **Demo signer** – Optional testnet wallet. In demo mode we only return sign intents and rely on the browser wallet to broadcast.
 
 ## Implementation plan (high level)
 
-1. **Pricing** – Generate a theoretical curve from seeded FX/IR numbers. Tag it with a version, inputs, and timestamps.
-2. **RFQ** – Call `/webhook/rfq` on n8n, persist every quote with expiry and show a countdown so it obviously expires.
-3. **Policy check** – Policy is a JSON document (limits, counterparties, time windows, quorum). `/seal/policy-check` replays the rules and includes a human-readable trace explaining each pass/fail.
-4. **Approvals** – Dealer and CFO complete WebAuthn challenges via `@simplewebauthn/server`. `/seal/approve` stores the attestation payloads and only flips `quorum_met` when both roles have signed.
-5. **Execute** –  
-   - Demo mode on: return a sign intent; the browser wallet signs and broadcasts on a testnet, returning `txHash`.  
-   - Demo mode off: call `/webhook/custodian` and get a synthetic `txHash` plus optional bank reference.
-6. **Attest settlement** – `/settlement/attest` binds `txHash`, `bankRef`, and a `trId` from the compliance webhook into both `executions` and `audit_events`.
-7. **Audit pack** – `/audit-pack` streams a ZIP that contains the curve snapshot, quotes, approval proofs, settlement data, compliance receipt stub, CSV exports, and the full hash-chain ledger.
+1. **Pricing** – Seeded FX/IR inputs generate a theoretical curve. Store version + inputs for later.
+2. **RFQ** – Call n8n `/webhook/rfq`, persist quotes with expiries, and show countdown timers.
+3. **Policy check** – JSON policy defines limits, whitelists, time windows, and quorum. `/seal/policy-check` runs the rules and returns a readable trace.
+4. **Approvals** – Dealer + CFO complete WebAuthn flows via `@simplewebauthn/server`; `/seal/approve` stores attestations and sets quorum.
+5. **Execute** – Demo mode on: return sign intent → wallet signs/broadcasts → `txHash`. Demo mode off: call `/webhook/custodian` for a synthetic `txHash`/bank ref.
+6. **Attest** – `/settlement/attest` ties `txHash`, `bankRef`, and compliance `trId` into `executions` and the audit ledger.
+7. **Audit pack** – `/audit-pack` streams a ZIP with the curve snapshot, quotes, approvals, settlement data, TR receipt stub, CSVs, and hash-chain manifest.
 
 ## Endpoints (contract)
 
 | Method | Path | Purpose | Input → Output |
 | --- | --- | --- | --- |
-| GET | `/pricing/curve?pair=` | Fetch the current theoretical curve | → `{version, points[], inputs}` |
-| POST | `/rfq` | Request quotes through n8n | `{pair, tenorDays, notionalUSD} → {rfqId, quotes[]}` |
-| POST | `/seal/policy-check` | Evaluate policy + simulation | `{quote} → {ok, checks, simulation}` |
-| POST | `/seal/approve` | Record a WebAuthn approval | `{actionId, webauthnProof} → {approvedBy, quorum}` |
-| POST | `/execute` | Trigger execution once quorum is met | Demo on: `{signIntent}`; demo off: `{txHash, bankRef?}` |
-| POST | `/settlement/attest` | Persist proof of settlement | `{execId, txHash, bankRef?, trId?} → OK` |
-| GET | `/audit-pack?execId=` | Download the audit ZIP | → binary stream |
+| GET | `/pricing/curve?pair=` | Theoretical curve snapshot | → `{version, points[], inputs}` |
+| POST | `/rfq` | Request quotes via n8n | `{pair, tenorDays, notionalUSD} → {rfqId, quotes[]}` |
+| POST | `/seal/policy-check` | Evaluate policy rules | `{quote} → {ok, checks, simulation}` |
+| POST | `/seal/approve` | Store a WebAuthn approval | `{actionId, webauthnProof} → {approvedBy, quorum}` |
+| POST | `/execute` | Execute after quorum | Demo on: `{signIntent}`; demo off: `{txHash, bankRef?}` |
+| POST | `/settlement/attest` | Persist settlement proof | `{execId, txHash, bankRef?, trId?} → OK` |
+| GET | `/audit-pack?execId=` | Download artifacts | → ZIP stream |
 
 ## Data model (minimal)
 
-- `users` with `id`, `email`, and `role`.
-- `webauthn_credentials` tied to each user (`credential_id`, `public_key`, `transports`).
-- `policies` storing the currently active JSON blob plus version metadata.
-- `quotes` keyed by RFQ, bank, quote ID, tenor, notional, forward rate, and expiry.
-- `executions` linking a quote to quorum status, tx hash, and bank reference.
-- `audit_events` with `(seq, prev_hash, event_type, payload, event_hash, created_at)` to form the ledger.
+- `users` (`id`, `email`, `role`).
+- `webauthn_credentials` (`user_id`, `credential_id`, `public_key`, `transports`).
+- `policies` (version metadata + JSON blob).
+- `quotes` (`rfq_id`, `bank`, `quote_id`, `tenor_days`, `notional_usd`, `fwd`, `valid_until`).
+- `executions` (`id`, `quote_id`, `approver_quorum`, `tx_hash`, `bank_ref`, `status`).
+- `audit_events` (`seq`, `prev_hash`, `event_type`, `payload`, `event_hash`, `created_at`).
 
 ## Environment & deployment
 
-- **Vercel**: set `DATABASE_URL` (Neon), `APP_BASE_URL` (for WebAuthn origin), `N8N_BASE_URL`, and `DEMO_MODE=true` (or false if you want to force custodian stubs).
-- **Neon**: run the schema migration via Prisma or straight SQL, then copy the connection string into Vercel.
-- **Render / n8n**: deploy a basic n8n project with three webhooks: `/webhook/rfq`, `/webhook/custodian`, `/webhook/compliance`. Keep responses deterministic so demos stay consistent.
+- **Vercel**: `DATABASE_URL` (Neon), `APP_BASE_URL` (WebAuthn origin), `N8N_BASE_URL`, `DEMO_MODE=true`.
+- **Neon**: apply the schema (Prisma or SQL), note the connection string.
+- **Render / n8n**: deploy three webhooks—`/webhook/rfq`, `/webhook/custodian`, `/webhook/compliance`—with deterministic JSON payloads.
 
-## Security posture (demo)
+## Security posture
 
-- No private keys live on the server. Execution either routes to the browser wallet (testnet) or to a stub that represents the custodian.
-- SEAL logic runs on every state change: policy evaluation, simulation, quorum tracking, circuit-breaker enforcement, and hash-chain logging. If anything is off, execution never unlocks.
+- Server stays keyless; execution either happens in the browser wallet (testnet) or via the custodian stub.
+- SEAL evaluates every step (policy, simulation, approvals, circuit breakers) and logs to an append-only hash chain.
 
 ## Quickstart
 
-1. `pnpm install` and `pnpm dev` (or use npm). Visit `http://localhost:3000`.
-2. Provision Neon + n8n, wire the env vars into `.env.local` / Vercel.
-3. Register passkeys for a Dealer and CFO, run through pricing → RFQ → approvals → execute → audit pack, and confirm the ZIP contains all artifacts.
+1. `pnpm install` and `pnpm dev` (or npm). Browse to `http://localhost:3000`.
+2. Spin up Neon + n8n, wire env vars into `.env.local` and Vercel.
+3. Register Dealer/CFO passkeys, then run the full flow and download the audit pack.
 
-## Demo script (10 minutes)
+## Demo
 
-1. Show the theoretical curve page and call out the version + inputs.
-2. Kick off an RFQ, let the three quotes appear, and choose one before it expires.
-3. Open the SEAL modal, review the policy check output, and approve as Dealer, then CFO.
-4. Execute in demo mode so the wallet signs, or flip demo mode off and show the custodian webhook response.
-5. Download the audit pack and walk through each artifact quickly.
-
-## Roadmap (next)
-
-- Swap the n8n stubs for real bank RFQ integrations and a Fireblocks/BitGo adapter.
-- Anchor the daily audit hash to a public chain and layer in anomaly alerts so ops teams get nudged before something drifts.
+1. Show the curve view and call out the version + inputs.  
+2. Trigger an RFQ and pick a quote before it expires.  
+3. Walk through the SEAL modal, approve as Dealer and CFO.  
+4. Execute (wallet or custodian stub) and capture the hash/ref.  
+5. Download the audit pack and point at the artifacts.
 
 ## Appendix
 
-- Keep a concrete policy JSON example in `src/lib/policy/example.json` (limits, whitelists, time windows, quorum, method allowlist) so tests and documentation match.
-- The Mermaid block above can be pasted into internal docs or PlantUML if we need variants; label the “Demo signer (testnet)” clearly whenever we present so it’s not confused with production custody.
+- Keep a sample policy JSON in `src/lib/policy/example.json` so docs/tests stay aligned.  
+- Mermaid block above can be reused in internal notes; clarify “Demo signer (testnet)” whenever presenting so nobody confuses it with production custody.
