@@ -12,6 +12,7 @@ SEAL is the execution firewall enforcing policy-as-code, dual/multi-approval wit
 ## Cloud architecture (Mermaid diagram)
 
 ```mermaid
+%%{init: {"theme":"base","themeVariables":{"background":"transparent"}}}%%
 flowchart LR
   classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
   classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
@@ -55,6 +56,15 @@ flowchart LR
   L --> DB
   WALLET -. "Demo Mode: sign-intent → sendTransaction" .-> APIGW
 ```
+
+### Component responsibilities
+
+- **Client Org boundary** – Next.js UI handles authentication (OIDC/SAML + passkeys), routes operators through pricing, RFQ intake, SEAL approval modal, execution, and audit download. No secrets or keys persist in the browser; state is fetched per step from API routes.
+- **Vercel API layer** – App Router handlers expose the contract in the next section, enforce input validation, hydrate SEAL policy engine, and coordinate with Neon + n8n. Every handler writes structured audit events before responding.
+- **SEAL Core** – Shared library used inside API routes. Policy-as-code module validates JSON policies, simulation renders human-readable diffs, approvals verify WebAuthn attestations and enforce quorum, circuit breakers track velocity/bulk thresholds, and the audit module hashes each event (prev_hash chaining).
+- **Neon Postgres** – Source of truth for operators, WebAuthn credentials, policy versions, RFQ quotes, executions, and audit events. Row-level hashes are recomputed server-side to end up in `audit_events`.
+- **Render / n8n stubs** – Deterministic workflows mimic downstream systems: `/webhook/rfq` returns mock quotes, `/webhook/custodian` fabricates settlement references, `/webhook/compliance` emits Travel-Rule receipt numbers. Swap these for production connectors later.
+- **Demo signer** – Optional browser wallet on an EVM testnet. When Demo Mode is enabled, the API returns sign intents and expects the wallet to broadcast, keeping the server keyless.
 
 ## Implementation plan (high level)
 
