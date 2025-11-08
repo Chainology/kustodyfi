@@ -1,166 +1,124 @@
-# KustodyFi - Calendar Risk Hedging Platform
+# Title & elevator pitch
 
-A production-quality marketing site for KustodyFi with Web3 wallet integration.
+**KustodyFi – SEAL-governed hedging & settlement orchestration (demo)**  
+SEAL is the execution firewall enforcing policy-as-code, dual/multi-approval with WebAuthn, and immutable audit trails. This demo covers pricing guidance → multi-bank RFQ → SEAL approvals → custody/settlement attestation → audit pack while every transition is versioned, signed, and replayable.
 
-## 🚀 Quick Start
+## Goals of this demo
 
-```bash
-# Development
-npm run dev
+- Show end-to-end orchestration with no private keys on the server.
+- Two approvals (Dealer + CFO) gate any execution.
+- On completion, produce a ZIP audit pack (curve snapshot, quotes, approvals, tx/bank refs, Travel-Rule receipt stub, hash-chain summary).
 
-# Build
-npm run build
+## Cloud architecture (Mermaid diagram)
 
-# Test
-npm test
+```mermaid
+flowchart LR
+  classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
+  classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
+  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#111,font-size:12px
+  classDef ext  fill:#ECFDF5,stroke:#90C8B0,rx:8,ry:8,color:#111,font-size:12px
+  classDef ops  fill:#FFF4E5,stroke:#D8B892,rx:8,ry:8,color:#111,font-size:12px
+
+  subgraph CLIENT["Client Org (Treasury / Risk / Finance)"]
+    WEB["Next.js UI<br/>Pricing · RFQ · Approvals(WebAuthn) · Execute · Audit"]:::box
+  end
+  subgraph KF["Vercel (Next.js API routes)"]
+    APIGW["API routes:<br/>/pricing/curve · /rfq · /seal/* · /execute · /settlement/attest · /audit-pack"]:::white
+    subgraph SEAL["SEAL Core — Execution Firewall"]
+      P["Policy-as-code"]:::seal
+      A["Dual approvals (WebAuthn)"]:::seal
+      S["Tx simulation (human-readable)"]:::seal
+      B["Circuit breakers (velocity/bulk/freeze)"]:::seal
+      L["Immutable audit (hash-chain)"]:::seal
+    end
+  end
+  subgraph DATA["Neon Postgres"]
+    DB["users · webauthn_credentials · policies · quotes · executions · audit_events"]:::ops
+  end
+  subgraph EXT["Render (n8n) — stubs"]
+    RFQW["/webhook/rfq"]:::ext
+    CUST["/webhook/custodian"]:::ext
+    COMP["/webhook/compliance"]:::ext
+  end
+  subgraph WAL["Demo signer (testnet)"]
+    WALLET["Browser wallet (wagmi/viem · WCv2)"]:::ext
+  end
+
+  WEB --> APIGW
+  APIGW --> RFQW
+  APIGW --> CUST
+  APIGW --> COMP
+  APIGW --> DB
+  P --> DB
+  A --> DB
+  S --> DB
+  L --> DB
+  WALLET -. "Demo Mode: sign-intent → sendTransaction" .-> APIGW
 ```
 
-## ✅ What's Complete
+## Implementation plan (high level)
 
-- ✅ **995 npm packages installed**
-- ✅ Next.js 14 with TypeScript
-- ✅ Tailwind CSS dark theme
-- ✅ **Web3 wallet connection** (wagmi, RainbowKit)
-- ✅ **Bilingual i18n** (English/Korean)
-- ✅ **All 9 components**: Nav, Hero, Problem, Calculator, HowItWorks, SealCustody, Compliance, Contact, Footer
-- ✅ **4 pages**: Home, Dashboard (protected), Privacy, Disclosures
-- ✅ **Calculator utilities with tests** (10 tests ready)
-- ✅ Analytics tracking system
-- ✅ SEO optimized (meta tags, sitemap, robots.txt)
+1. **Pricing guidance** – compute a versioned theoretical curve from seeded FX/IR inputs and persist the inputs for audit.
+2. **RFQ** – POST to Render-hosted n8n `/webhook/rfq`, persist `{bank, quoteId, fwd, validUntil}`, and display countdown timers per quote.
+3. **SEAL policy** – JSON rules encode limits, whitelists, time windows, and quorum; `/seal/policy-check` returns `{ok, checks, simulation}` describing the path to approval.
+4. **Approvals** – Dealer and CFO complete WebAuthn challenges via `@simplewebauthn/*`; `/seal/approve` stores attestations and only flips quorum once both roles are satisfied.
+5. **Execute** –
+   - Demo Mode **ON**: return a sign-intent, have browser wallet (wagmi/viem, WC v2) sign/send on testnet, capture `txHash`.
+   - Demo Mode **OFF**: call n8n `/webhook/custodian`, receive a deterministic pseudo `txHash` + optional settlement reference.
+6. **Attestation** – `/settlement/attest` links `txHash`, `bankRef`, and compliance `trId` into `executions` plus `audit_events`, extending the hash-chain.
+7. **Audit Pack** – `/audit-pack` streams a ZIP (HTML→PDF summary, CSV exports, JSON artifacts, hash-chain manifest) for regulator hand-off.
 
-## 📂 Project Structure
+## Endpoints (contract)
 
-```
-kustodyfi/
-├── src/
-│   ├── app/                 # Pages
-│   │   ├── layout.tsx       # Root layout
-│   │   ├── page.tsx         # Home page
-│   │   ├── dashboard/       # Protected dashboard
-│   │   ├── privacy/         # Privacy policy
-│   │   └── disclosures/     # Legal disclosures
-│   ├── components/          # React components (9 total)
-│   ├── contexts/            # React contexts (Locale, Wallet)
-│   ├── i18n/               # Translations (EN/KR)
-│   └── lib/                # Utilities (calculator, analytics, wagmi)
-├── public/                 # Static files
-└── package.json            # Dependencies
-```
+| Method | Path | Purpose | Input → Output |
+| --- | --- | --- | --- |
+| GET | `/pricing/curve?pair=` | Versioned theoretical curve | → `{version, points[], inputs}` |
+| POST | `/rfq` | Request quotes via n8n | `{pair, tenorDays, notionalUSD} → {rfqId, quotes[]}` |
+| POST | `/seal/policy-check` | Evaluate policy | `{quote} → {ok, checks, simulation}` |
+| POST | `/seal/approve` | WebAuthn approval | `{actionId, webauthnProof} → {approvedBy, quorum}` |
+| POST | `/execute` | Execute after quorum | Demo ON: `{signIntent}`; OFF: `{txHash, bankRef?}` |
+| POST | `/settlement/attest` | Record proofs | `{execId, txHash, bankRef?, trId?} → OK` |
+| GET | `/audit-pack?execId=` | Download evidence | → ZIP (PDF/CSV/JSON) |
 
-## 🌐 Features
+## Data model (minimal)
 
-### Web3 Wallet Connection
-- MetaMask, WalletConnect, Coinbase Wallet support
-- 5 networks: Ethereum, Polygon, Arbitrum, Base, Optimism
-- Protected dashboard page
+- `users(id, email, role)`; `webauthn_credentials(user_id, credential_id, public_key, transports)`
+- `policies(version, json)`
+- `quotes(rfq_id, bank, quote_id, tenor_days, notional_usd, fwd, valid_until)`
+- `executions(id, quote_id, approver_quorum, tx_hash, bank_ref, status)`
+- `audit_events(seq, prev_hash, event_type, payload, event_hash, created_at)`
 
-### Bilingual Support
-- English and Korean translations
-- Toggle in navigation bar (🌐 button)
+## Environment & deployment
 
-### Components
-1. **Nav** - Navigation with wallet connect
-2. **Hero** - Hero section with CTAs
-3. **Problem** - Calendar risk explanation
-4. **Calculator** - FX hedging calculator (placeholder)
-5. **HowItWorks** - 5-step workflow
-6. **SealCustody** - Custody features
-7. **Compliance** - Legal information
-8. **Contact** - Contact section
-9. **Footer** - Footer with links
+- **Vercel** env vars: `DATABASE_URL` (Neon), `APP_BASE_URL` (WebAuthn origin), `N8N_BASE_URL` (Render), `DEMO_MODE=true`.
+- **Neon**: apply schema migration (Prisma/SQL) to provision the tables above.
+- **Render (n8n)**: host deterministic flows for `/webhook/rfq`, `/webhook/custodian`, `/webhook/compliance`.
 
-## 🔧 Development
+## Security posture (demo)
 
-```bash
-# Install dependencies
-npm install
+- Keyless: the server never holds private keys; signing occurs in the browser (testnet) or via the custodian stub.
+- SEAL gates every state change (policy evaluation, dual approvals, simulation, circuit breakers) and emits an immutable hash-chain audit trail.
 
-# Run development server
-npm run dev
+## Quickstart
 
-# Open browser
-open http://localhost:3000
-```
+1. Local: `pnpm dev` (or `npm run dev`) and open `http://localhost:3000`.
+2. Provision: connect repo to Vercel, create Neon database, deploy Render n8n instance.
+3. Register Dealer/CFO passkeys, run Pricing → RFQ → Approvals → Execute → Audit Pack.
 
-## 🧪 Testing
+## Demo script (10 minutes)
 
-```bash
-# Run tests
-npm test
+1. Show theoretical curve (version + seeded inputs).
+2. Fire RFQ; present three quotes with expiries and select the target bank.
+3. Walk through SEAL modal: policy results, simulation trace, Dealer + CFO WebAuthn approvals.
+4. Execute: Demo Mode wallet signs and returns `txHash` (or custodian stub response).
+5. Download Audit Pack ZIP; highlight curve snapshot, raw quotes, approvals, tx/bank ref, Travel-Rule receipt stub, hash-chain summary.
 
-# Run tests with UI
-npm run test:ui
-```
+## Roadmap (next)
 
-## 🔐 Wallet Setup (Optional)
+- Replace n8n stubs with real bank RFQ connectors and Fireblocks/BitGo adapters.
+- Anchor daily audit Merkle roots on-chain and surface anomaly-detection insights (AI assist).
 
-Get a WalletConnect Project ID:
-1. Visit https://cloud.walletconnect.com/
-2. Create project
-3. Copy Project ID
-4. Add to `.env.local`:
-```bash
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id_here
-```
+## Appendix
 
-## 📱 Pages
-
-- `/` - Home (all sections)
-- `/dashboard` - Protected dashboard (requires wallet)
-- `/privacy` - Privacy policy
-- `/disclosures` - Legal disclosures
-
-## 🎨 Customization
-
-### Edit Content
-- **English**: `src/i18n/en.json`
-- **Korean**: `src/i18n/ko.json`
-
-### Edit Components
-All components in `src/components/`
-
-### Edit Styling
-- **Theme colors**: `tailwind.config.ts`
-- **Global styles**: `src/app/globals.css`
-
-## 📊 Tech Stack
-
-- **Next.js 14** (App Router)
-- **TypeScript**
-- **Tailwind CSS**
-- **wagmi** + **viem** + **RainbowKit** (Web3)
-- **Lucide Icons**
-- **Vitest** (testing)
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-```bash
-# Push to GitHub
-git push
-
-# Deploy on Vercel
-# Import your GitHub repo at vercel.com
-```
-
-## 📝 Notes
-
-- Components are simplified placeholders
-- Calculator logic is ready but UI needs enhancement
-- All Web3 functionality is working
-- Tests are ready to run
-
-## 🎯 Next Steps
-
-1. Enhance component content (Problem, Calculator, HowItWorks, etc.)
-2. Add full Calculator UI implementation
-3. Add more detailed content
-4. Deploy to Vercel
-5. Set up analytics integration
-
----
-
-**Built with ❤️ for Korean exporters and importers**
-
-**Server is running at**: http://localhost:3000
-
+- Provide a policy JSON example covering limits, whitelists, time windows, quorum, and method allowlists.
+- Reuse the Mermaid block above (and optional PlantUML) for internal docs; clarify "Demo signer (testnet)" label to avoid product confusion.

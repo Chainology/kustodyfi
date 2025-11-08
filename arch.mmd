@@ -1,0 +1,104 @@
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
+    "fontSize": "14px",
+    "primaryColor":   "#F6F8FB",
+    "primaryTextColor": "#111111",
+    "primaryBorderColor":"#AEB7C2",
+    "lineColor": "#9AA9D6",
+    "tertiaryColor":  "#FFFFFF"
+  },
+  "flowchart": { "htmlLabels": true, "useMaxWidth": true, "curve": "linear" }
+}}%%
+flowchart LR
+  linkStyle default stroke:#9AA9D6,stroke-width:2;
+
+  %% ---------- Class styles ----------
+  classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px;
+  classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px;
+  classDef seal fill:#E8F0FE,stroke:#A0A6C8,rx:8,ry:8,color:#111,font-size:12px;
+  classDef ext  fill:#ECFDF5,stroke:#90C8B0,rx:8,ry:8,color:#111,font-size:12px;
+  classDef ops  fill:#FFF4E5,stroke:#D8B892,rx:8,ry:8,color:#111,font-size:12px;
+
+  %% ---------- Trust boundaries ----------
+  subgraph CLIENT["Client Org (Treasury / Risk / Finance)"]
+    direction TB
+    WEB["Web App (Next.js/TS)<br/>SSO (OIDC/SAML) • FIDO2/WebAuthn"]:::box
+  end
+  style CLIENT fill:#ffffff00,stroke:#888,stroke-width:2,stroke-dasharray:6 6;
+
+  subgraph KF["KustodyFi Orchestration Plane (SEAL inside)"]
+    direction TB
+    APIGW["API Gateway / WAF<br/>(Kong/NGINX • mTLS/JWT)"]:::white
+
+    subgraph ORCH["Orchestration Services"]
+      direction LR
+      PRICE["Pricing Guidance<br/>(Theoretical Curve API)"]:::white
+      RFQ["RFQ Router<br/>(Banks • Securities)"]:::white
+      SETTLE["Settlement Attestation<br/>(On‑chain tx • Bank ref)"]:::white
+      AUDIT["Audit Export<br/>(PDF • CSV • API)"]:::white
+    end
+
+    subgraph SEAL["SEAL Core — Execution Firewall"]
+      direction TB
+      P["Policy‑as‑code (DSL→WASM)"]:::seal
+      A["Dual/Multi‑approval (FIDO2/WebAuthn)"]:::seal
+      S["Tx Simulation (EVM; method allowlists)"]:::seal
+      B["Circuit breakers (velocity • bulk • freeze)"]:::seal
+      L["Immutable audit (hash chain • daily root)"]:::seal
+    end
+
+    subgraph OPS["Data & Ops Plane"]
+      direction LR
+      DB["Postgres (OLTP)"]:::ops
+      BUS["Event Bus (Kafka/Redpanda)"]:::ops
+      OBJ["Evidence Store (WORM)"]:::ops
+      WH["Warehouse (Snowflake/BigQuery)"]:::ops
+      OBS["Observability (OTel • Prom/Graf • Jaeger • Loki)"]:::ops
+      SEC["Secrets (Vault/KMS)"]:::ops
+    end
+  end
+  style KF fill:#ffffff00,stroke:#888,stroke-width:2,stroke-dasharray:6 6;
+
+  subgraph EXT["External Counterparties"]
+    direction TB
+    BANKS["Banks / Liquidity Providers<br/>(Quotes & Confirms)"]:::ext
+    CUST["Custodians<br/>(Fireblocks • BitGo • Copper • Anchorage • Circle)"]:::ext
+    COMP["Compliance<br/>(Travel Rule: CODE/VerifyVASP/Sygna • KYC)"]:::ext
+  end
+  style EXT fill:#ffffff00,stroke:#888,stroke-width:2,stroke-dasharray:6 6;
+
+  %% ---------- Flows ----------
+  WEB --> APIGW
+  APIGW --> PRICE
+  APIGW --> RFQ
+  APIGW --> SETTLE
+  APIGW --> AUDIT
+
+  RFQ --> BANKS
+  SETTLE --> COMP
+
+  %% Governance/attestation links (dashed feel)
+  PRICE -. "publish snapshot (versioned)" .-> P
+  RFQ <-. "approve to send" .-> A
+  A --> CUST
+
+  %% Data plane links
+  P --> BUS
+  A --> BUS
+  S --> BUS
+  B --> BUS
+  L --> BUS
+
+  PRICE --> DB
+  RFQ --> DB
+  SETTLE --> DB
+  AUDIT --> OBJ
+  DB --> WH
+  BUS --> WH
+  WH --> OBS
+  SEC --> APIGW
+  SEC --> RFQ
+  SEC --> SETTLE
+  SEC --> AUDIT
