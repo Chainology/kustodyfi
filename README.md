@@ -12,7 +12,6 @@ SEAL is the execution firewall enforcing policy-as-code, dual/multi-approval wit
 ## Cloud architecture (Mermaid diagram)
 
 ```mermaid
-%%{init: {"theme":"base","themeVariables":{"background":"transparent"}}}%%
 flowchart LR
   classDef box fill:#F6F8FB,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
   classDef white fill:#FFFFFF,stroke:#AEB7C2,rx:8,ry:8,color:#111,font-size:12px
