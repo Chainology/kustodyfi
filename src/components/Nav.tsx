@@ -6,11 +6,14 @@ import ConnectWallet from './ConnectWallet'
 import Link from 'next/link'
 import { useAccount } from 'wagmi'
 import { useState, useEffect } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 
 export default function Nav() {
   const { locale, setLocale, t } = useLocale()
   const { isConnected } = useAccount()
   const [mounted, setMounted] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     setMounted(true)
@@ -23,13 +26,27 @@ export default function Nav() {
     }
   }
 
+  const handleNavClick = (id: string) => {
+    if (pathname === '/') {
+      scrollToSection(id)
+    } else {
+      router.push(`/#${id}`)
+    }
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-lg border-b border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => {
+                if (pathname === '/') {
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                } else {
+                  router.push('/')
+                }
+              }}
               className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"
             >
               KustodyFi
@@ -38,23 +55,35 @@ export default function Nav() {
 
           <div className="hidden md:flex items-center space-x-8">
             <button
-              onClick={() => scrollToSection('calculator')}
+              onClick={() => handleNavClick('calculator')}
               className="text-gray-300 hover:text-white transition-colors"
             >
               {t('nav.calculator')}
             </button>
             <button
-              onClick={() => scrollToSection('how-it-works')}
+              onClick={() => handleNavClick('how-it-works')}
               className="text-gray-300 hover:text-white transition-colors"
             >
               {t('nav.howItWorks')}
             </button>
             <button
-              onClick={() => scrollToSection('custody')}
+              onClick={() => handleNavClick('custody')}
               className="text-gray-300 hover:text-white transition-colors"
             >
               {t('nav.custody')}
             </button>
+            <Link
+              href="/product"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              {t('nav.product')}
+            </Link>
+            <Link
+              href="/demo"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              {t('nav.demo')}
+            </Link>
             {mounted && isConnected && (
               <Link
                 href="/dashboard"
@@ -63,8 +92,14 @@ export default function Nav() {
                 Dashboard
               </Link>
             )}
+            <Link
+              href="/legal"
+              className="text-gray-300 hover:text-white transition-colors"
+            >
+              {t('nav.legal')}
+            </Link>
             <button
-              onClick={() => scrollToSection('contact')}
+              onClick={() => handleNavClick('contact')}
               className="text-gray-300 hover:text-white transition-colors"
             >
               {t('nav.contact')}
@@ -89,4 +124,3 @@ export default function Nav() {
     </nav>
   )
 }
-

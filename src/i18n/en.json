@@ -3,11 +3,14 @@
     "calculator": "Calculator",
     "howItWorks": "How It Works",
     "custody": "SEAL",
-    "contact": "Contact"
+    "contact": "Contact",
+    "product": "Product",
+    "demo": "Demo",
+    "legal": "Legal"
   },
   "hero": {
-    "title": "Hedge Calendar Risk. Custody You Can Trust.",
-    "subtitle": "Price and manage USD↔KRW exposures over T+30 to T+365 on stablecoin rails. SEAL-enforced approvals, immutable audit, and segregated custody.",
+    "title": "SEAL-governed hedging & settlement — keyless server",
+    "subtitle": "We publish theoretical FX guidance, archive your bank quotes, enforce policy with two-person approvals, and deliver a regulator-ready audit pack.",
     "features": [
       "SEAL-enforced approvals",
       "Immutable audit trail",
@@ -16,6 +19,41 @@
     ],
     "ctaCalculator": "Try Calendar-Risk Calculator",
     "ctaContact": "Talk to Us"
+  },
+  "badges": {
+    "nonBroker": "Non-broker demo"
+  },
+  "demo": {
+    "banner": "Demo signer (testnet) — approvals required before execute",
+    "headings": {
+      "pricing": "Pricing (Theo)",
+      "quoteIntake": "Quote Intake",
+      "seal": "SEAL Approvals",
+      "execute": "Execute",
+      "audit": "Audit Pack"
+    },
+    "sections": {
+      "pricing": "Theoretical curve & swap points (versioned; default UI spread: ~3bp)",
+      "quoteIntake": "Paste bank quotes you received; we normalize, time-stamp, and compare vs Theo (deltas, implied yields). We do not source or redistribute quotes.",
+      "seal": "SEAL approvals: policy checks ➝ dual WebAuthn (Dealer & CFO) ➝ immutable audit (hash-chain).",
+      "execute": "Execute via testnet wallet (sign-intent) or custodian stub; store tx hash and optional Travel-Rule receipt.",
+      "audit": "Download unified Audit Pack (PDF/CSV/JSON + hash-chain summary)."
+    }
+  },
+  "product": {
+    "seal": {
+      "features": [
+        "Policy-as-code (limits, whitelists, time windows, method allowlists)",
+        "Dual approvals (WebAuthn; out-of-band hardware-bound)",
+        "Human-readable simulation (pre-execution intent)",
+        "Circuit breakers (velocity/bulk/freeze)",
+        "Immutable audit (hash-chained; pack export)"
+      ]
+    },
+    "formulas": "Fwd = Spot × (1 + r_KRW × dKR/365) / (1 + r_USD × dUS/360); Odd-date via log-linear interpolation on log(DF); Fwd = Spot × USD_DF / KRW_DF."
+  },
+  "legal": {
+    "disclosure": "KustodyFi is not a broker or exchange. This demo does not source or redistribute bank quotes; it only archives customer-provided quotes. Server remains keyless; execution uses a testnet wallet or a non-binding custodian stub."
   },
   "problem": {
     "title": "What Is Calendar Risk?",

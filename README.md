@@ -7,11 +7,11 @@ This repo captures the minimal wiring we use to show how SEAL manages a hedge: p
 - Force Dealer + CFO passkeys before unlocking execution.
 - Emit a ZIP that bundles curve inputs, quotes, approvals, tx/bank refs, Travel-Rule receipt stub, and the hash-chain digest.
 
-## Architecture (Final Target)
+## Architecture
 
 The final product is a middle-layer orchestration with SEAL as the execution firewall. It integrates bank RFQ, enterprise custodians, Travel-Rule networks, and on-chain rails while producing a regulator-ready audit pack (quote→approvals→settlement proofs). Each block below addresses the incident patterns and competitor gaps we see in the field: policy-as-code plus dual approval to block insider pushes, simulation and circuit breakers to avoid fat-finger or velocity abuse, and unified audit outputs so ops/legal have a single source of truth.
 
-### System Architecture (Mermaid)
+### System Architecture
 
 ```mermaid
 %%{init: {
